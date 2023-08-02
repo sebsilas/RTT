@@ -20,8 +20,11 @@ RTT <- function(app_name = "RTT",
                          elts = RTT_tl,
                          title = "Rhythm Tapping Test",
                          admin_password = "demo",
-                         opt = musicassessr::musicassessr_opt(app_name = app_name, musicassessr_aws = musicassessr_aws, setup_options = musicassessr::setup_pages_options(input_type = "midi_keyboard", headphones = FALSE),
-                                                midi_input = TRUE)
+                         opt = musicassessr::musicassessr_opt(app_name = app_name,
+                                                              midi_input = TRUE,
+                                                              record_audio = FALSE,
+                                                              musicassessr_aws = musicassessr_aws,
+                                                              setup_options = musicassessr::setup_pages_options(input_type = "midi_keyboard", headphones = FALSE))
   )
 
 
