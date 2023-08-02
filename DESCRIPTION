@@ -14,7 +14,8 @@ Depends:
 RoxygenNote: 7.2.3
 Imports: 
     magrittr,
-    musicassessr (>= 0.0.0.9000)
+    musicassessr (>= 0.0.0.9000),
+    TSdist (>= 3.7.1)
 Remotes: 
     sebsilas/musicassessr
 URL: https://github.com/sebsilas/RTT

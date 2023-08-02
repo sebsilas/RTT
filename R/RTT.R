@@ -12,7 +12,7 @@
 #'
 #' @examples
 RTT <- function(app_name = "RTT",
-                musicassessr_aws = FALSE) {
+                musicassessr_aws = TRUE) {
 
   musicassessr::make_musicassessr_test(
                          welcome_page = psychTestR::one_button_page("Welcome to the Rhythm Tapping Test!"),

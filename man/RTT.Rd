@@ -4,7 +4,7 @@
 \alias{RTT}
 \title{Launch the Rhythm Tapping Task}
 \usage{
-RTT(app_name = "RTT", musicassessr_aws = FALSE)
+RTT(app_name = "RTT", musicassessr_aws = TRUE)
 }
 \arguments{
 \item{musicassessr_aws}{}
