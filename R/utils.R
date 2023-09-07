@@ -67,3 +67,9 @@ is.integerlike <- function(x) {
 is.scalar.integerlike <- function(x) {
   is.scalar(x) && is.integerlike(x)
 }
+
+type_from_page <- function(page_type) {
+  page_type %>%
+    stringr::str_remove("record_") %>%
+    stringr::str_remove("_page")
+}

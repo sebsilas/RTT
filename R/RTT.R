@@ -6,25 +6,42 @@
 #'
 #' @param app_name
 #' @param musicassessr_aws
+#' @param data_collection_method
 #'
 #' @return
 #' @export
 #'
 #' @examples
-RTT <- function(app_name = "RTT",
-                musicassessr_aws = FALSE) {
+RTT_standalone <- function(app_name = "RTT",
+                           musicassessr_aws = FALSE,
+                           data_collection_method = c("midi", "audio", "key_presses")) {
+
+  data_collection_method <- match.arg(data_collection_method)
+  page_type <- paste0("record_", data_collection_method, "_page")
+
+  stopifnot(
+            is.scalar.character(app_name),
+            is.scalar.logical(musicassessr_aws),
+            data_collection_method %in%  c("midi", "audio", "key_presses")
+            )
+
+  tl <- RTT_tl(page_type)
 
   musicassessr::make_musicassessr_test(
                          welcome_page = psychTestR::one_button_page("Welcome to the Rhythm Tapping Test!"),
                          final_page_ui = "Thank you for completing the test!",
-                         elts = RTT_tl,
+                         elts = tl,
                          title = "Rhythm Tapping Test",
                          admin_password = "demo",
                          opt = musicassessr::musicassessr_opt(app_name = app_name,
-                                                              midi_input = TRUE,
-                                                              record_audio = FALSE,
+                                                              midi_input = data_collection_method == "midi",
+                                                              record_audio = data_collection_method == "audio",
                                                               musicassessr_aws = musicassessr_aws,
-                                                              setup_options = musicassessr::setup_pages_options(input_type = "midi_keyboard", headphones = FALSE))
+                                                              setup_options = musicassessr::setup_pages_options(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses",
+                                                                                                                headphones = TRUE,
+                                                                                                                get_instrument_range = FALSE,
+                                                                                                                SNR_test = FALSE,
+                                                                                                                concise_wording = TRUE))
   )
 
 
@@ -32,18 +49,52 @@ RTT <- function(app_name = "RTT",
 
 
 
-RTT_tl <- function() {
-  psychTestR::join(
-    rhythm_free_recall_trials(num_items = 3L),
-    steady_beat_trials(num_items = 5L),
-    rhythm_call_and_response_trials(num_items = 5L, bpm = "user_determined")
-  )
+RTT_tl <- function(page_type = "record_midi_page") {
+
+  function() {
+    psychTestR::join(
+      #rhythm_free_recall_trials(num_items = 3L, page_type = page_type),
+      steady_beat_trials(num_items = 5L, page_type = page_type),
+      rhythm_call_and_response_trials(num_items = 5L, bpm = "user_determined", page_type = page_type)
+    )
+  }
 }
 
 
 
 
-rhythm_free_recall_trials <-  function(num_items = 3, give_average_bpm = TRUE) {
+rhythm_free_recall_trials <-  function(num_items = 3,
+                                       give_average_bpm = TRUE,
+                                       page_type = "record_midi_page",
+                                       page_title = "Tap a steady beat",
+                                       page_text = "Please tap a steady beat, then click Stop.") {
+
+
+  block <- if(page_type == "record_midi_page") {
+    musicassessr::record_midi_block(no_pages = num_items,
+                                    page_title = page_title,
+                                    page_text = page_text,
+                                    get_answer = function(input, state, ...) {
+                                      musicassessr::get_answer_rhythm_production(input, state, type = "midi", ...)
+                                    })
+  } else if(page_type == "record_audio_page") {
+    musicassessr::record_audio_block(no_pages = num_items,
+                                     page_title = page_title,
+                                     page_text = page_text,
+                                     get_answer = function(input, state, ...) {
+                                       musicassessr::get_answer_rhythm_production(input, state, type = "audio", ...)
+                                     }
+                                     )
+  } else if(page_type == "record_key_presses_page") {
+    musicassessr::record_key_presses_block(no_pages = num_items,
+                                            page_title = page_title,
+                                            page_text = page_text,
+                                            get_answer = function(input, state, ...) {
+                                              musicassessr::get_answer_rhythm_production(input, state, type = "key_presses", ...)
+                                            })
+  } else {
+    stop("Page type not known")
+  }
 
   psychTestR::join(
 
@@ -53,10 +104,8 @@ rhythm_free_recall_trials <-  function(num_items = 3, give_average_bpm = TRUE) {
         shiny::tags$p("You can tap at whatever comfortable speed is good for you.")
       )),
 
-    musicassessr::record_midi_block(no_pages = num_items,
-                      page_title = "Tap a steady beat",
-                      page_text = "Please tap a steady beat, then click Stop.",
-                      get_answer = musicassessr:: get_answer_midi_rhythm_production),
+    # Main trial block
+    block,
 
     if(give_average_bpm) {
       psychTestR::reactive_page(function(state, ...) {
@@ -87,11 +136,11 @@ rhythm_free_recall_trials <-  function(num_items = 3, give_average_bpm = TRUE) {
 
 
 
-steady_beat_trials <- function(num_items, bpm_range = 60:200, length_in_seconds = 10) {
+steady_beat_trials <- function(num_items, bpm_range = 60:200, length_in_seconds = 10, page_type = "record_midi_page") {
 
   smp <- sample(bpm_range, size = num_items) %>% sort()
 
-  trials <- purrr::map(smp, function(bpm) steady_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds))
+  trials <- purrr::map(smp, function(bpm) steady_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type))
 
   psychTestR::join(
     psychTestR::one_button_page("On the next set of pages, please try and tap along in time with the beat that you hear."),
@@ -100,11 +149,17 @@ steady_beat_trials <- function(num_items, bpm_range = 60:200, length_in_seconds 
 
 }
 
-steady_beat_trial_page <- function(bpm = 120, length_in_seconds = 5) {
+steady_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "record_midi_page") {
+
+  print('steady_bea')
+  print(page_type)
 
   psychTestR::reactive_page(function(state, ...) {
 
     midi_device <- psychTestR::get_global("midi_device", state)
+
+    midi_device <- if(is.null(midi_device)) "" else midi_device
+
 
     if(bpm == "user_determined") {
       bpm <- psychTestR::get_global("user_bpm", state)
@@ -122,12 +177,14 @@ steady_beat_trial_page <- function(bpm = 120, length_in_seconds = 5) {
                                   stimuli_type = "midi_notes",
                                   page_title = "Tap along with the beat",
                                   page_text = "Tap along with the beat as best you can.",
-                                  page_type = "record_midi_page",
+                                  page_type = page_type,
                                   midi_device = midi_device,
                                   sound = 'rhythm',
-                                  get_answer = musicassessr:: get_answer_midi_rhythm_production,
-                                  trigger_start_of_stimuli_fun = musicassessr:: paradigm(paradigm_type = "simultaneous_recall", page_type = "record_midi_page")$beginning_of_stimulus_fun,
-                                  trigger_end_of_stimuli_fun = musicassessr:: paradigm(paradigm_type = "simultaneous_recall", page_type = "record_midi_page", )$end_of_stimulus_fun,
+                                  get_answer = function(input, state, ...) {
+                                    musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
+                                  },
+                                  trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto")$trigger_start_of_stimulus_fun,
+                                  trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto")$trigger_end_of_stimulus_fun,
     )
   })
 }
@@ -136,7 +193,9 @@ steady_beat_trial_page <- function(bpm = 120, length_in_seconds = 5) {
 
 
 
-rhythm_call_and_response_trials <-  function(num_items = 10, bpm = "user_determined") {
+rhythm_call_and_response_trials <-  function(num_items = 10,
+                                             bpm = "user_determined",
+                                             page_type = "record_midi_page") {
 
   smp_rhythm <- RTT::RTT_item_bank %>%
     dplyr::slice_sample(n = num_items)
@@ -164,13 +223,15 @@ rhythm_call_and_response_trials <-  function(num_items = 10, bpm = "user_determi
                                     stimuli_type = "midi_notes",
                                     page_title = "Tap back the rhythm.",
                                     page_text = "Please tap back a rhythm after you hear it, then click stop.",
-                                    page_type = "record_midi_page",
+                                    page_type = page_type,
                                     midi_device = midi_device,
-                                    trigger_start_of_stimuli_fun = musicassessr:: paradigm("call_and_response", page_type = "record_midi_page")$beginning_of_stimulus_fun,
-                                    trigger_end_of_stimuli_fun = musicassessr:: paradigm("call_and_response", page_type = "record_midi_page")$end_of_stimulus_fun,
+                                    trigger_start_of_stimuli_fun = musicassessr:: paradigm("call_and_response", page_type = page_type)$beginning_of_stimulus_fun,
+                                    trigger_end_of_stimuli_fun = musicassessr:: paradigm("call_and_response", page_type = page_type)$end_of_stimulus_fun,
                                     sound = 'rhythm',
                                     answer_meta_data = tibble::tibble(pattern = pattern_split, bpm = bpm, type = type),
-                                    get_answer = musicassessr:: get_answer_midi_rhythm_production)
+                                    get_answer = function(input, state, ...) {
+                                      musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
+                                    })
 
     })
 
