@@ -1,0 +1,104 @@
+
+
+```{r}
+
+#
+#
+# # Profile time alignment
+#
+#
+# stimuli <- rep(0.5, 10) %>%
+#   cumsum() %>%
+#   c(0, .) %>%
+#   tibble::tibble(stimuli = .)
+#
+# # Jitter = 1
+# ran_seq <- stimuli %>%
+#   pull(stimuli) %>%
+#   jitter(1) %>%
+#   tibble::tibble(user_rhythm = .) %>%
+#   mutate(user_rhythm = case_when(user_rhythm < 0 ~ 0, TRUE ~ user_rhythm))
+#
+# # Jitter = 3
+#
+# ran_seq_3 <- stimuli %>%
+#   pull(stimuli) %>%
+#   jitter(3) %>%
+#   tibble::tibble(user_rhythm = .) %>%
+#   mutate(user_rhythm = case_when(user_rhythm < 0 ~ 0, TRUE ~ user_rhythm))
+#
+# # Jitter = 5
+#
+# ran_seq_5 <- stimuli %>%
+#   pull(stimuli) %>%
+#   jitter(5) %>%
+#   tibble::tibble(user_rhythm = .) %>%
+#   mutate(user_rhythm = case_when(user_rhythm < 0 ~ 0, TRUE ~ user_rhythm))
+#
+# # Jitter = 23
+#
+# ran_seq_23 <- stimuli %>%
+#   pull(stimuli) %>%
+#   jitter(23) %>%
+#   tibble::tibble(user_rhythm = .) %>%
+#   mutate(user_rhythm = case_when(user_rhythm < 0 ~ 0, TRUE ~ user_rhythm))
+#
+#
+# # Plot
+# ggplot() +
+#   geom_vline(aes(xintercept = stimuli), color = "lightgrey", data = stimuli) +
+#   geom_vline(aes(xintercept = user_rhythm), color = "purple", data = ran_seq) +
+#   theme_void()
+#
+#
+# ggplot() +
+#   geom_vline(aes(xintercept = stimuli), color = "lightgrey", data = stimuli) +
+#   geom_vline(aes(xintercept = user_rhythm), color = "purple", data = ran_seq_3) +
+#   theme_void()
+#
+# ggplot() +
+#   geom_vline(aes(xintercept = stimuli), color = "lightgrey", data = stimuli) +
+#   geom_vline(aes(xintercept = user_rhythm), color = "purple", data = ran_seq_5) +
+#   theme_void()
+#
+#
+# ggplot() +
+#   geom_vline(aes(xintercept = stimuli), color = "lightgrey", data = stimuli) +
+#   geom_vline(aes(xintercept = user_rhythm), color = "purple", data = ran_seq_11) +
+#   theme_void()
+#
+#
+# # TAM
+#
+# TAMDistance(stimuli$stimuli, stimuli$stimuli)
+#
+# TAMDistance(stimuli$stimuli, ran_seq$user_rhythm) # TAM is not sensitive to small perturbations..?
+#
+# TAMDistance(stimuli$stimuli, ran_seq_3$user_rhythm)
+#
+# TAMDistance(stimuli$stimuli, ran_seq_5$user_rhythm)
+#
+# TAMDistance(stimuli$stimuli, ran_seq_23$user_rhythm)
+#
+#
+# # dtw
+#
+#
+# dtw_dist <- dtw::dtw(stimuli$stimuli, stimuli$stimuli)
+# dtw_dist$distance
+#
+# dtw_dist_1 <- dtw::dtw(stimuli$stimuli, ran_seq$user_rhythm)
+# dtw_dist_1$distance
+#
+# dtw_dist_3 <- dtw::dtw(stimuli$stimuli, ran_seq_3$user_rhythm)
+# dtw_dist_3$distance
+#
+# dtw_dist_5 <- dtw::dtw(stimuli$stimuli, ran_seq_5$user_rhythm)
+# dtw_dist_5$distance
+#
+# dtw_dist_23 <- dtw::dtw(stimuli$stimuli, ran_seq_23$user_rhythm)
+# dtw_dist_23$distance
+#
+# # Maybe good old dtw is better?
+
+```
