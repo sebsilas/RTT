@@ -153,7 +153,7 @@ RTT <- function(page_type = "record_midi_page",
 
       # Call and Response Trials
       ## Examples
-      if(num_examples$call_and_response > 0L) rhythm_free_recall_trials(num_items = num_examples$call_and_response, page_type = page_type, feedback = feedback, with_intro_page = num_examples$call_and_response > 0L, with_example_introduction = TRUE),
+      if(num_examples$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_examples$call_and_response, page_type = page_type, feedback = feedback, with_intro_page = num_examples$call_and_response > 0L, with_example_introduction = TRUE),
       ## Real Trials
       if(num_examples$call_and_response > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
       if(num_items$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_items$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, call_and_response_end = call_and_response_end, with_intro_page = num_examples$call_and_response < 1L)
