@@ -146,7 +146,7 @@ RTT <- function(page_type = "record_midi_page",
 
       # Sync Beat Trials
       ## Examples
-      if(num_examples$sync_beat > 0L) rhythm_free_recall_trials(num_items = num_examples$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat > 0L, with_example_introduction = TRUE),
+      if(num_examples$sync_beat > 0L) steady_beat_trials(num_items = num_examples$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat > 0L, with_example_introduction = TRUE),
       ## Real Trials
       if(num_examples$sync_beat > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
       if(num_items$sync_beat > 0L) steady_beat_trials(num_items = num_items$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat < 1L),
