@@ -9,7 +9,7 @@ RTT_standalone(
   musicassessr_aws = FALSE,
   data_collection_method = c("midi", "audio", "key_presses"),
   feedback = rhythm_feedback(type = "none"),
-  num_items = list(free_recall = 3L, sync_beat = 3L, call_and_response = 3L),
+  num_items = list(free_recall = 3L, sync_beat = 3L, call_and_response = 10L),
   num_examples = list(free_recall = 2L, sync_beat = 2L, call_and_response = 2L),
   call_and_response_end = c("manual", "auto"),
   call_and_response_bpm = "user_determined",
