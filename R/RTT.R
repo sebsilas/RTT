@@ -340,7 +340,7 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
 
       print(paste0("Using user BPM: ", bpm))
 
-      if(is.null(midi_device)) { shiny::showNotification(psychTestR::i18n("no_midi_device_selected")) }
+      if(is.null(midi_device) && page_type == "record_midi_page") { shiny::showNotification(psychTestR::i18n("no_midi_device_selected")) }
 
       rhythm <- RTT::pattern_to_ms(pattern = itembankr::str_mel_to_vector(pattern_split), bpm = bpm, type = type)
 
