@@ -120,13 +120,12 @@ RTT <- function(page_type = "record_midi_page",
 
   call_and_response_end <- match.arg(call_and_response_end)
 
-
   stopifnot(
     page_type %in% c("record_midi_page", "record_audio_page", "record_key_presses_page"),
     is.list(feedback) && length(feedback) == 2L && check_names_same(names(feedback), c("type", "fun")),
     is.list(num_items) && length(num_items) == 3L && length(setdiff(names(num_items), c("free_recall", "sync_beat", "call_and_response"))) == 0,
     is.list(num_examples) && length(num_examples) == 3L && length(setdiff(names(num_items), c("free_recall", "sync_beat", "call_and_response"))) == 0,
-    call_and_response_bpm == "user_determined" || is.scalar.numeric(user_determined),
+    call_and_response_bpm == "user_determined" || is.scalar.numeric(call_and_response_bpm),
     is.scalar.logical(setup_pages),
     is.scalar.character(data_collection_method),
     is.scalar.logical(get_p_id)
