@@ -78,3 +78,16 @@ type_from_page <- function(page_type) {
 check_names_same <- function(names_1, names_2) {
   length(setdiff(names_1, names_2)) == 0
 }
+
+
+is.scalar.na <- function(x) {
+  all(is.na(x)) & length(x) == 1
+}
+
+is.scalar.null <- function(x) {
+  all(is.null(x)) & length(x) == 0
+}
+
+is.scalar.na.or.null <- function(x) {
+  is.scalar.na(x) | is.scalar.null(x)
+}

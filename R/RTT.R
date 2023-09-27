@@ -24,7 +24,7 @@ RTT_standalone <- function(app_name = "RTT",
                            feedback = rhythm_feedback(type = "none"),
                            num_items = list(free_recall = 3L,
                                             sync_beat = 3L,
-                                            call_and_response = 3L),
+                                            call_and_response = 10L),
                            num_examples = list(free_recall = 2L,
                                                sync_beat = 2L,
                                                call_and_response = 2L),
@@ -227,7 +227,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
         results <- psychTestR::results(state)$results
 
         bpms <- purrr::map_int(results, function(i) {
-          if(is.null(i$user_bpm)) NA else i$user_bpm
+          if(is.scalar.na.or.null(i$user_bpm)) NA else i$user_bpm
         }) %>% as.numeric()
 
         avg_bpm <- round(mean(bpms, na.rm = TRUE))
