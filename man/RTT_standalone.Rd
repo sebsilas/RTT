@@ -13,11 +13,19 @@ RTT_standalone(
   num_examples = list(free_recall = 2L, sync_beat = 2L, call_and_response = 2L),
   call_and_response_end = c("manual", "auto"),
   call_and_response_bpm = "user_determined",
-  get_p_id = TRUE
+  get_p_id = TRUE,
+  sync_beat_bpm_range = 60:200,
+  sync_beat_bpms = NULL,
+  filter_call_and_response_stimuli_length = NULL,
+  opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png"
 )
 }
 \arguments{
-\item{get_p_id}{}
+\item{sync_beat_bpms}{A vector of BPMs.}
+
+\item{filter_call_and_response_stimuli_length}{NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.}
+
+\item{opening_and_final_image}{A string to the location of the image to use on the first and final pages.}
 }
 \description{
 Launch the Rhythm Tapping Task

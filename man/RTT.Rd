@@ -13,11 +13,16 @@ RTT(
   call_and_response_bpm = "user_determined",
   setup_pages = TRUE,
   data_collection_method = c("midi", "audio", "key_presses"),
-  get_p_id = TRUE
+  get_p_id = TRUE,
+  sync_beat_bpm_range = 60:200,
+  sync_beat_bpms = NULL,
+  filter_call_and_response_stimuli_length = NULL
 )
 }
 \arguments{
-\item{get_p_id}{}
+\item{sync_beat_bpms}{A vector of BPMs.}
+
+\item{filter_call_and_response_stimuli_length}{NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.}
 }
 \description{
 Rhythm tapping test

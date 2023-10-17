@@ -13,6 +13,19 @@ add_rtt_feedback <- function(block, feedback) {
   block
 }
 
+#' Setup feedback
+#'
+#' @param type
+#' @param text
+#' @param image
+#' @param height
+#' @param width
+#' @param progress
+#'
+#' @return
+#' @export
+#'
+#' @examples
 rhythm_feedback <- function(type,
                             text = "Well done!",
                             image = 'https://adaptiveeartraining.com/assets/drum.png',

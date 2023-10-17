@@ -111,7 +111,10 @@ rm(RTT_item_bank_narrow)
 
 RTT_item_bank <- RTT_item_bank %>%
   rowwise() %>%
-  mutate(durations_bpm_120 = paste0( pattern_to_ms( itembankr::str_mel_to_vector(pattern_split) , bpm = 120, type = type), collapse = ", ")) %>%
+  mutate(
+    durations_bpm_120 = paste0( pattern_to_ms( itembankr::str_mel_to_vector(pattern_split) , bpm = 120, type = type), collapse = ", "),
+    stimulus_length = length(itembankr::str_mel_to_vector(durations_bpm_120))
+    ) %>%
   ungroup()
 
 
