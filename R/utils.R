@@ -91,3 +91,7 @@ is.scalar.null <- function(x) {
 is.scalar.na.or.null <- function(x) {
   is.scalar.na(x) | is.scalar.null(x)
 }
+
+is.null.or <- function(x, f) {
+  is.null(x) || f(x)
+}
