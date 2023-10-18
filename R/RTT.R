@@ -197,7 +197,8 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                        page_text = "Please tap a steady beat, then click Stop.",
                                        feedback = rhythm_feedback(type = "none"),
                                        with_intro_page = TRUE,
-                                       with_example_introduction = FALSE) {
+                                       with_example_introduction = FALSE,
+                                       label = "rhythm_free_recall") {
 
   stopifnot(
     is.scalar.logical(with_intro_page),
@@ -207,6 +208,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
 
   block <- if(page_type == "record_midi_page") {
     musicassessr::record_midi_block(no_pages = num_items,
+                                    label = paste0(label, ".", page_type),
                                     page_title = page_title,
                                     page_text = page_text,
                                     get_answer = function(input, state, ...) {
@@ -214,6 +216,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                     })
   } else if(page_type == "record_audio_page") {
     musicassessr::record_audio_block(no_pages = num_items,
+                                     label = paste0(label, ".", page_type),
                                      page_title = page_title,
                                      page_text = page_text,
                                      get_answer = function(input, state, ...) {
@@ -221,6 +224,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                      })
   } else if(page_type == "record_key_presses_page") {
     musicassessr::record_key_presses_block(no_pages = num_items,
+                                           label = paste0(label, ".", page_type),
                                             page_title = page_title,
                                             page_text = page_text,
                                             get_answer = function(input, state, ...) {
@@ -284,16 +288,17 @@ sync_beat_trials <- function(num_items,
                              feedback = rhythm_feedback(type = "none"),
                              with_intro_page = TRUE,
                              with_example_introduction = FALSE,
-                             preset_bpms = NULL) {
+                             preset_bpms = NULL,
+                             label = "sync_beat_trial_page") {
 
   if(!is.null(bpm_range)) {
 
     smp <- sample(bpm_range, size = num_items) %>% sort()
-    trials <- purrr::map(smp, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type))
+    trials <- purrr::map(smp, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label))
 
   } else if(!is.null(preset_bpms)) {
 
-    trials <- purrr::map(preset_bpms, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type))
+    trials <- purrr::map(preset_bpms, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label))
 
   } else {
     stop("Steady beat trial parameters not understood")
@@ -311,7 +316,7 @@ sync_beat_trials <- function(num_items,
 
 }
 
-sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "record_midi_page") {
+sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "record_midi_page", label = "sync_beat_trial_page") {
 
   psychTestR::reactive_page(function(state, ...) {
 
@@ -339,6 +344,7 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
                                   page_title = "Tap along with the beat",
                                   page_text = "Tap along with the beat as best you can.",
                                   page_type = page_type,
+                                  page_label = paste0(label, ".", page_type),
                                   midi_device = midi_device,
                                   sound = 'rhythm',
                                   get_answer = function(input, state, ...) {
@@ -361,7 +367,8 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
                                              call_and_response_end = c("manual", "auto"),
                                              with_intro_page = TRUE,
                                              with_example_introduction = FALSE,
-                                             filter_call_and_response_stimuli_length = NULL) {
+                                             filter_call_and_response_stimuli_length = NULL,
+                                             label = "rhythm_call_and_response") {
 
   call_and_response_end <- match.arg(call_and_response_end)
 
@@ -397,6 +404,7 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
       musicassessr::present_stimuli(stimuli = rep(60, length(rhythm)),
                                     durations = rhythm,
                                     display_modality = "auditory",
+                                    page_label = paste0(label, ".", page_type),
                                     stimuli_type = "midi_notes",
                                     page_title = "Tap back the rhythm.",
                                     page_text = "Please tap back a rhythm after you hear it, then click stop.",
