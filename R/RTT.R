@@ -350,7 +350,7 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
                                   get_answer = function(input, state, ...) {
                                     musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
                                   },
-                                  trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto")$trigger_start_of_stimulus_fun,
+                                  trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto", midi_device = if(page_type == "record_midi_page") midi_device else NULL, instantiate_midi = page_type == "record_midi_page")$trigger_start_of_stimulus_fun,
                                   trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto")$trigger_end_of_stimulus_fun,
     )
   })

@@ -7,3 +7,6 @@ node
 output
 test_apps
 www
+.Renviron
+data-raw/RTT-calibration-audio
+data-raw/results.Rmd
