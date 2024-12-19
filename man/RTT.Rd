@@ -17,7 +17,12 @@ RTT(
   sync_beat_bpm_range = 60:200,
   sync_beat_bpms = NULL,
   filter_call_and_response_stimuli_length = NULL,
-  mute_midi_playback = TRUE
+  mute_midi_playback = TRUE,
+  standalone = FALSE,
+  asynchronous_api_mode = FALSE,
+  app_name,
+  experiment_id = NULL,
+  user_id = NULL
 )
 }
 \arguments{
@@ -26,6 +31,8 @@ RTT(
 \item{filter_call_and_response_stimuli_length}{NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.}
 
 \item{mute_midi_playback}{Should user audio feedback be muted when using a MIDI pad?}
+
+\item{user_id}{}
 }
 \description{
 Rhythm tapping test

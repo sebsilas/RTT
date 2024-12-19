@@ -6,7 +6,6 @@
 \usage{
 RTT_standalone(
   app_name = "RTT",
-  musicassessr_aws = FALSE,
   data_collection_method = c("midi", "audio", "key_presses"),
   feedback = rhythm_feedback(type = "none"),
   num_items = list(free_recall = 3L, sync_beat = 3L, call_and_response = 10L),
@@ -18,7 +17,11 @@ RTT_standalone(
   sync_beat_bpms = NULL,
   filter_call_and_response_stimuli_length = NULL,
   opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png",
-  mute_midi_playback = TRUE
+  mute_midi_playback = TRUE,
+  asynchronous_api_mode = FALSE,
+  experiment_id = NULL,
+  user_id = NULL,
+  use_presigned_url = FALSE
 )
 }
 \arguments{
@@ -29,6 +32,8 @@ RTT_standalone(
 \item{opening_and_final_image}{A string to the location of the image to use on the first and final pages.}
 
 \item{mute_midi_playback}{Should user audio feedback be muted when using a MIDI pad?}
+
+\item{use_presigned_url}{}
 }
 \description{
 Launch the Rhythm Tapping Task
