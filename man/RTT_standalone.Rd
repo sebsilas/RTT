@@ -17,7 +17,8 @@ RTT_standalone(
   sync_beat_bpm_range = 60:200,
   sync_beat_bpms = NULL,
   filter_call_and_response_stimuli_length = NULL,
-  opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png"
+  opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png",
+  mute_midi_playback = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ RTT_standalone(
 \item{filter_call_and_response_stimuli_length}{NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.}
 
 \item{opening_and_final_image}{A string to the location of the image to use on the first and final pages.}
+
+\item{mute_midi_playback}{Should user audio feedback be muted when using a MIDI pad?}
 }
 \description{
 Launch the Rhythm Tapping Task

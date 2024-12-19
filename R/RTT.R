@@ -17,6 +17,7 @@
 #' @param sync_beat_bpms A vector of BPMs.
 #' @param filter_call_and_response_stimuli_length NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.
 #' @param opening_and_final_image A string to the location of the image to use on the first and final pages.
+#' @param mute_midi_playback Should user audio feedback be muted when using a MIDI pad?
 #'
 #' @return
 #' @export
@@ -38,7 +39,8 @@ RTT_standalone <- function(app_name = "RTT",
                            sync_beat_bpm_range = 60:200,
                            sync_beat_bpms = NULL,
                            filter_call_and_response_stimuli_length = NULL,
-                           opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png") {
+                           opening_and_final_image = "https://adaptiveeartraining.com/assets/drum.png",
+                           mute_midi_playback = TRUE) {
 
   data_collection_method <- match.arg(data_collection_method)
   call_and_response_end <- match.arg(call_and_response_end)
@@ -55,7 +57,8 @@ RTT_standalone <- function(app_name = "RTT",
             is.null.or(sync_beat_bpm_range, is.numeric),
             is.null.or(sync_beat_bpms, is.numeric),
             is.null.or(filter_call_and_response_stimuli_length, is.numeric),
-            is.scalar.character(opening_and_final_image)
+            is.scalar.character(opening_and_final_image),
+            is.scalar.logical(mute_midi_playback)
             )
 
   tl <- RTT(page_type,
@@ -68,7 +71,8 @@ RTT_standalone <- function(app_name = "RTT",
             data_collection_method,
             get_p_id = FALSE,
             sync_beat_bpm_range = sync_beat_bpm_range,
-            sync_beat_bpms = sync_beat_bpms) # This get sorted by make_musicassessr_test
+            sync_beat_bpms = sync_beat_bpms,
+            mute_midi_playback = mute_midi_playback)
 
   welcome_pg <- psychTestR::one_button_page(shiny::tags$div(shiny::tags$h2("Welcome to the Rhythm Tapping Test!"),
                                                             shiny::tags$img(src = opening_and_final_image, height = 200, width = 200)))
@@ -80,7 +84,7 @@ RTT_standalone <- function(app_name = "RTT",
 
   musicassessr::make_musicassessr_test(
                          welcome_page = welcome_pg,
-                         final_page_ui = final_page_ui,
+                         final_page = psychTestR::final_page(final_page_ui),
                          elts = tl,
                          title = "Rhythm Tapping Test",
                          admin_password = "demo",
@@ -93,8 +97,8 @@ RTT_standalone <- function(app_name = "RTT",
                                                                                                                 headphones = TRUE,
                                                                                                                 get_instrument_range = FALSE,
                                                                                                                 SNR_test = FALSE,
-                                                                                                                concise_wording = TRUE))
-  )
+                                                                                                                concise_wording = TRUE,
+                                                                                                                mute_midi_playback = mute_midi_playback)))
 
 
 }
@@ -115,6 +119,7 @@ RTT_standalone <- function(app_name = "RTT",
 #' @param sync_beat_bpm_range
 #' @param sync_beat_bpms A vector of BPMs.
 #' @param filter_call_and_response_stimuli_length NULL = not filtered. Or a vector of the range of stimulus lengths. e.g., 3:12 will only have stimulus lengths 3-12.
+#' @param mute_midi_playback Should user audio feedback be muted when using a MIDI pad?
 #'
 #' @return
 #' @export
@@ -135,7 +140,8 @@ RTT <- function(page_type = "record_midi_page",
                 get_p_id = TRUE,
                 sync_beat_bpm_range = 60:200,
                 sync_beat_bpms = NULL,
-                filter_call_and_response_stimuli_length = NULL) {
+                filter_call_and_response_stimuli_length = NULL,
+                mute_midi_playback = TRUE) {
 
   data_collection_method <- match.arg(data_collection_method)
 
@@ -155,34 +161,38 @@ RTT <- function(page_type = "record_midi_page",
     is.scalar.logical(get_p_id),
     is.null.or(sync_beat_bpm_range, is.numeric),
     is.null.or(sync_beat_bpms, is.numeric),
-    is.null.or(filter_call_and_response_stimuli_length, is.numeric)
+    is.null.or(filter_call_and_response_stimuli_length, is.numeric),
+    is.scalar.logical(mute_midi_playback)
   )
 
   function() {
+
+    print('adaas?')
+
     psychTestR::join(
       if(get_p_id) psychTestR::get_p_id(),
-      if(setup_pages) musicassessr::setup_pages(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses", headphones = TRUE, get_instrument_range = FALSE, SNR_test = FALSE, concise_wording = TRUE),
+      if(setup_pages) musicassessr::setup_pages(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses", headphones = TRUE, get_instrument_range = FALSE, SNR_test = FALSE, concise_wording = TRUE, mute_midi_playback = mute_midi_playback),
 
       # Free Recall Trials
       ## Examples
-      if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher") ),
+      if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback),
       ## Real Trials
       if(num_examples$free_recall > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
-      if(num_items$free_recall > 0L) rhythm_free_recall_trials(num_items = num_items$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall < 1L, give_average_bpm = identical(feedback$type, "researcher")), # i.e., only give the average if using "researcher" feedback mode
+      if(num_items$free_recall > 0L) rhythm_free_recall_trials(num_items = num_items$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall < 1L, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback), # i.e., only give the average if using "researcher" feedback mode
 
       # Sync Beat Trials
       ## Examples
-      if(num_examples$sync_beat > 0L) sync_beat_trials(num_items = num_examples$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat > 0L, with_example_introduction = TRUE, bpm_range = sync_beat_bpm_range, preset_bpms = rep(sync_beat_bpms[1], num_examples$sync_beat) ),
+      if(num_examples$sync_beat > 0L) sync_beat_trials(num_items = num_examples$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat > 0L, with_example_introduction = TRUE, bpm_range = sync_beat_bpm_range, preset_bpms = rep(sync_beat_bpms[1], num_examples$sync_beat), mute_midi_playback = mute_midi_playback),
       ## Real Trials
       if(num_examples$sync_beat > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
-      if(num_items$sync_beat > 0L) sync_beat_trials(num_items = num_items$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat < 1L, bpm_range = sync_beat_bpm_range, preset_bpms = sync_beat_bpms),
+      if(num_items$sync_beat > 0L) sync_beat_trials(num_items = num_items$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat < 1L, bpm_range = sync_beat_bpm_range, preset_bpms = sync_beat_bpms, mute_midi_playback = mute_midi_playback),
 
       # Call and Response Trials
       ## Examples
-      if(num_examples$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_examples$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, with_intro_page = num_examples$call_and_response > 0L, with_example_introduction = TRUE, filter_call_and_response_stimuli_length = filter_call_and_response_stimuli_length),
+      if(num_examples$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_examples$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, with_intro_page = num_examples$call_and_response > 0L, with_example_introduction = TRUE, filter_call_and_response_stimuli_length = filter_call_and_response_stimuli_length, mute_midi_playback = mute_midi_playback),
       ## Real Trials
       if(num_examples$call_and_response > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
-      if(num_items$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_items$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, call_and_response_end = call_and_response_end, with_intro_page = num_examples$call_and_response < 1L, filter_call_and_response_stimuli_length = filter_call_and_response_stimuli_length)
+      if(num_items$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_items$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, call_and_response_end = call_and_response_end, with_intro_page = num_examples$call_and_response < 1L, filter_call_and_response_stimuli_length = filter_call_and_response_stimuli_length, mute_midi_playback = mute_midi_playback)
     )
   }
 }
@@ -191,18 +201,20 @@ RTT <- function(page_type = "record_midi_page",
 
 
 rhythm_free_recall_trials <- function(num_items = 3,
-                                       give_average_bpm = TRUE,
-                                       page_type = "record_midi_page",
-                                       page_title = "Tap a steady beat",
-                                       page_text = "Please tap a steady beat, then click Stop.",
-                                       feedback = rhythm_feedback(type = "none"),
-                                       with_intro_page = TRUE,
-                                       with_example_introduction = FALSE,
-                                       label = "rhythm_free_recall") {
+                                      give_average_bpm = TRUE,
+                                      page_type = "record_midi_page",
+                                      page_title = "Tap a steady beat",
+                                      page_text = "Please tap a steady beat, then click Stop.",
+                                      feedback = rhythm_feedback(type = "none"),
+                                      with_intro_page = TRUE,
+                                      with_example_introduction = FALSE,
+                                      label = "rhythm_free_recall",
+                                      mute_midi_playback = TRUE) {
 
   stopifnot(
     is.scalar.logical(with_intro_page),
-    is.scalar.logical(with_example_introduction)
+    is.scalar.logical(with_example_introduction),
+    is.scalar.logical(mute_midi_playback)
   )
 
 
@@ -213,7 +225,8 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                     page_text = page_text,
                                     get_answer = function(input, state, ...) {
                                       musicassessr::get_answer_rhythm_production(input, state, type = "midi", ...)
-                                    })
+                                    },
+                                    mute_midi_playback = mute_midi_playback)
   } else if(page_type == "record_audio_page") {
     musicassessr::record_audio_block(no_pages = num_items,
                                      label = paste0(label, ".", page_type),
@@ -289,16 +302,17 @@ sync_beat_trials <- function(num_items,
                              with_intro_page = TRUE,
                              with_example_introduction = FALSE,
                              preset_bpms = NULL,
-                             label = "sync_beat_trial_page") {
+                             label = "sync_beat_trial_page",
+                             mute_midi_playback = TRUE) {
 
   if(!is.null(bpm_range)) {
 
     smp <- sample(bpm_range, size = num_items) %>% sort()
-    trials <- purrr::map(smp, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label))
+    trials <- purrr::map(smp, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label, mute_midi_playback = mute_midi_playback))
 
   } else if(!is.null(preset_bpms)) {
 
-    trials <- purrr::map(preset_bpms, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label))
+    trials <- purrr::map(preset_bpms, function(bpm) sync_beat_trial_page(bpm = bpm, length_in_seconds = length_in_seconds, page_type = page_type, label = label, mute_midi_playback = mute_midi_playback))
 
   } else {
     stop("Steady beat trial parameters not understood")
@@ -316,7 +330,7 @@ sync_beat_trials <- function(num_items,
 
 }
 
-sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "record_midi_page", label = "sync_beat_trial_page") {
+sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "record_midi_page", label = "sync_beat_trial_page", mute_midi_playback = TRUE) {
 
   psychTestR::reactive_page(function(state, ...) {
 
@@ -350,8 +364,9 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
                                   get_answer = function(input, state, ...) {
                                     musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
                                   },
-                                  trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto", midi_device = if(page_type == "record_midi_page") midi_device else NULL, instantiate_midi = page_type == "record_midi_page")$trigger_start_of_stimulus_fun,
-                                  trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto")$trigger_end_of_stimulus_fun,
+                                  mute_midi_playback = mute_midi_playback,
+                                  trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto", midi_device = if(page_type == "record_midi_page") midi_device else NULL, instantiate_midi = page_type == "record_midi_page", mute_midi_playback = mute_midi_playback)$trigger_start_of_stimulus_fun,
+                                  trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall", page_type = page_type, call_and_response_end = "auto", mute_midi_playback = mute_midi_playback)$trigger_end_of_stimulus_fun,
     )
   })
 }
@@ -368,7 +383,8 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
                                              with_intro_page = TRUE,
                                              with_example_introduction = FALSE,
                                              filter_call_and_response_stimuli_length = NULL,
-                                             label = "rhythm_call_and_response") {
+                                             label = "rhythm_call_and_response",
+                                             mute_midi_playback = TRUE) {
 
   call_and_response_end <- match.arg(call_and_response_end)
 
@@ -410,13 +426,15 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
                                     page_text = "Please tap back a rhythm after you hear it, then click stop.",
                                     page_type = page_type,
                                     midi_device = if(is.null(midi_device)) "" else midi_device,
-                                    trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response", page_type = page_type, call_and_response_end = call_and_response_end)$trigger_start_of_stimulus_fun,
-                                    trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response", page_type = page_type, call_and_response_end = call_and_response_end)$trigger_end_of_stimulus_fun,
+                                    trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response", page_type = page_type, call_and_response_end = call_and_response_end, mute_midi_playback = mute_midi_playback)$trigger_start_of_stimulus_fun,
+                                    trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response", page_type = page_type, call_and_response_end = call_and_response_end, mute_midi_playback = mute_midi_playback)$trigger_end_of_stimulus_fun,
                                     sound = 'rhythm',
                                     answer_meta_data = tibble::tibble(pattern = pattern_split, bpm = bpm, type = type),
                                     get_answer = function(input, state, ...) {
                                       musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
-                                    })
+                                    },
+                                    mute_midi_playback = mute_midi_playback
+                                    )
 
     })
 

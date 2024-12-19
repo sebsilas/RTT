@@ -3,19 +3,16 @@
 #'
 #' @param app_name
 #' @param data_collection_method
-#' @param musicassessr_aws
 #'
 #' @return
 #' @export
 #'
 #' @examples
 RTT_calibration_constructor <- function(app_name = "RTT_calibration_study",
-                                        data_collection_method = "audio",
-                                        musicassessr_aws = FALSE) {
+                                        data_collection_method = "audio") {
 
   RTT::RTT_standalone(app_name = app_name,
                       data_collection_method = data_collection_method,
-                      musicassessr_aws = musicassessr_aws,
                       feedback = RTT::rhythm_feedback(type = "image", image = "https://musicassessr.com/assets/robot.png", height = 200, width = 200),
                       num_examples = list(free_recall = 1L, sync_beat = 1L, call_and_response = 1L),
                       num_items = list(free_recall = 3L, sync_beat = 6L, call_and_response = 5L),

@@ -115,7 +115,9 @@ RTT_item_bank <- RTT_item_bank %>%
     durations_bpm_120 = paste0( pattern_to_ms( itembankr::str_mel_to_vector(pattern_split) , bpm = 120, type = type), collapse = ", "),
     stimulus_length = length(itembankr::str_mel_to_vector(durations_bpm_120))
     ) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(item_id = paste0("RTT_", dplyr::row_number()))
+
 
 
 

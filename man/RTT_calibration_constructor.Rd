@@ -6,12 +6,11 @@
 \usage{
 RTT_calibration_constructor(
   app_name = "RTT_calibration_study",
-  data_collection_method = "audio",
-  musicassessr_aws = FALSE
+  data_collection_method = "audio"
 )
 }
 \arguments{
-\item{musicassessr_aws}{}
+\item{data_collection_method}{}
 }
 \description{
 Constructor for 2023 calibration study
