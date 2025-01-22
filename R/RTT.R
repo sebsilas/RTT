@@ -428,16 +428,16 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
                                   get_answer = function(input, state, ...) {
                                     musicassessr::get_answer_rhythm_production(input, state, type = type_from_page(page_type), ...)
                                   },
-                                  #mute_midi_playback = mute_midi_playback, # not working at the moment..
+                                  mute_midi_playback = mute_midi_playback,
                                   trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall",
                                                                                          page_type = page_type,
                                                                                          call_and_response_end = "auto",
-                                                                                         #mute_midi_playback = mute_midi_playback,
+                                                                                         mute_midi_playback = mute_midi_playback,
                                                                                          midi_device = if(page_type == "record_midi_page") midi_device else NULL,
                                                                                          instantiate_midi = page_type == "record_midi_page")$trigger_start_of_stimulus_fun,
                                   trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "simultaneous_recall",
                                                                                        page_type = page_type,
-                                                                                       #mute_midi_playback = mute_midi_playback,
+                                                                                       mute_midi_playback = mute_midi_playback,
                                                                                        call_and_response_end = "auto")$trigger_end_of_stimulus_fun,
                                   db_vars = db_vars
 
@@ -531,11 +531,11 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
                                     midi_device = if(is.null(midi_device)) "" else midi_device,
                                     trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response",
                                                                                            page_type = page_type,
-                                                                                           #mute_midi_playback = mute_midi_playback,
+                                                                                           mute_midi_playback = mute_midi_playback,
                                                                                            call_and_response_end = call_and_response_end)$trigger_start_of_stimulus_fun,
                                     trigger_end_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response",
                                                                                          page_type = page_type,
-                                                                                         #mute_midi_playback = mute_midi_playback
+                                                                                         mute_midi_playback = mute_midi_playback,
                                                                                          call_and_response_end = call_and_response_end)$trigger_end_of_stimulus_fun,
                                     sound = 'rhythm',
                                     db_vars = db_vars,
