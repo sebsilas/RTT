@@ -116,7 +116,6 @@ RTT_standalone <- function(app_name = "RTT",
                                                                                                                 headphones = TRUE,
                                                                                                                 get_instrument_range = FALSE,
                                                                                                                 SNR_test = FALSE,
-                                                                                                                #mute_midi_playback = mute_midi_playback not working yet..
                                                                                                                 concise_wording = TRUE)))
 
 
@@ -393,10 +392,7 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
 
     session_id <- musicassessr::get_promise_value(psychTestR::get_global("session_id", state))
 
-    print('session_id...')
-    print(session_id)
-
-    db_vars <- if(psychTestR::get_global("musicassessr_db", state)) {
+    db_vars <- if(psychTestR::get_global("asynchronous_api_mode", state)) {
 
       list(
         midi_vs_audio = stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page"),
@@ -500,7 +496,7 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
       # Set some vars for storing in DB
       trial_time_started <- Sys.time()
 
-      db_vars <- if(psychTestR::get_global("musicassessr_db", state)) {
+      db_vars <- if(psychTestR::get_global("asynchronous_api_mode", state)) {
 
         list(
           midi_vs_audio = stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page"),
