@@ -21,6 +21,7 @@
 #' @param experiment_id
 #' @param user_id
 #' @param use_presigned_url
+#' @param feedback_free_recall
 #'
 #' @return
 #' @export
@@ -46,7 +47,8 @@ RTT_standalone <- function(app_name = "RTT",
                            asynchronous_api_mode = FALSE,
                            experiment_id = NULL,
                            user_id = NULL,
-                           use_presigned_url = FALSE) {
+                           use_presigned_url = FALSE,
+                           feedback_free_recall = rhythm_feedback(type = "none")) {
 
   data_collection_method <- match.arg(data_collection_method)
   call_and_response_end <- match.arg(call_and_response_end)
@@ -67,7 +69,9 @@ RTT_standalone <- function(app_name = "RTT",
             is.scalar.logical(asynchronous_api_mode),
             is.null.or(experiment_id, is.numeric),
             is.null.or(user_id, is.numeric),
-            is.scalar.logical(use_presigned_url))
+            is.scalar.logical(use_presigned_url),
+            is.list(feedback_free_recall) && length(feedback_free_recall) == 2L && check_names_same(names(feedback_free_recall), c("type", "fun"))
+            )
 
   tl <- RTT(page_type,
             feedback,
@@ -85,10 +89,20 @@ RTT_standalone <- function(app_name = "RTT",
             asynchronous_api_mode = asynchronous_api_mode,
             app_name = app_name,
             experiment_id = experiment_id,
-            user_id = user_id)
+            user_id = user_id,
+            feedback_free_recall = feedback_free_recall)
 
   welcome_pg <- psychTestR::one_button_page(shiny::tags$div(shiny::tags$h2("Welcome to the Rhythm Tapping Test!"),
-                                                            if(asynchronous_api_mode) shiny::tags$script("var upload_to_s3 = true; console.log('Turning S3 mode on');"),
+                                                            if(asynchronous_api_mode) shiny::tags$script("
+                                                                                                        console.log('upload_to_s3', upload_to_s3);
+                                                                                                        if (typeof upload_to_s3 === 'undefined') {
+                                                                                                           let upload_to_s3 = true;
+                                                                                                        } else {
+                                                                                                           upload_to_s3 = true;
+                                                                                                        }
+                                                                                                        console.log('upload_to_s3', upload_to_s3);
+                                                                                                         console.log('Turning S3 mode on');
+                                                                                                         "),
                                                             shiny::tags$img(src = opening_and_final_image, height = 200, width = 200)))
 
 
@@ -143,6 +157,7 @@ RTT_standalone <- function(app_name = "RTT",
 #' @param app_name
 #' @param experiment_id
 #' @param user_id
+#' @param feedback_free_recall
 #'
 #' @return
 #' @export
@@ -169,7 +184,8 @@ RTT <- function(page_type = "record_midi_page",
                 asynchronous_api_mode = FALSE,
                 app_name,
                 experiment_id = NULL,
-                user_id = NULL) {
+                user_id = NULL,
+                feedback_free_recall = rhythm_feedback(type = "none")) {
 
   data_collection_method <- match.arg(data_collection_method)
 
@@ -195,7 +211,8 @@ RTT <- function(page_type = "record_midi_page",
     is.scalar.logical(asynchronous_api_mode),
     is.scalar.character(app_name),
     is.null.or(experiment_id, is.numeric),
-    is.null.or(user_id, is.numeric)
+    is.null.or(user_id, is.numeric),
+    is.list(feedback_free_recall) && length(feedback_free_recall) == 2L && check_names_same(names(feedback_free_recall), c("type", "fun"))
   )
 
   function() {
@@ -207,10 +224,10 @@ RTT <- function(page_type = "record_midi_page",
 
       # Free Recall Trials
       ## Examples
-      if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback),
+      if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback_free_recall, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback, asynchronous_api_mode = asynchronous_api_mode),
       ## Real Trials
       if(num_examples$free_recall > 0L) psychTestR::one_button_page("Now you're ready for the real thing!"),
-      if(num_items$free_recall > 0L) rhythm_free_recall_trials(num_items = num_items$free_recall, page_type = page_type, feedback = feedback, with_intro_page = num_examples$free_recall < 1L, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback), # i.e., only give the average if using "researcher" feedback mode
+      if(num_items$free_recall > 0L) rhythm_free_recall_trials(num_items = num_items$free_recall, page_type = page_type, feedback = feedback_free_recall, with_intro_page = num_examples$free_recall < 1L, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback, asynchronous_api_mode = asynchronous_api_mode), # i.e., only give the average if using "researcher" feedback mode
 
       # Sync Beat Trials
       ## Examples
@@ -241,11 +258,12 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                       page_type = "record_midi_page",
                                       page_title = "Tap a steady beat",
                                       page_text = "Please tap a steady beat, then click Stop.",
-                                      feedback = rhythm_feedback(type = "none"),
                                       with_intro_page = TRUE,
                                       with_example_introduction = FALSE,
                                       label = "rhythm_free_recall",
-                                      mute_midi_playback = TRUE) {
+                                      mute_midi_playback = TRUE,
+                                      asynchronous_api_mode = FALSE,
+                                      feedback = rhythm_feedback(type = "none")) {
 
   stopifnot(
     is.scalar.logical(with_intro_page),
@@ -253,6 +271,28 @@ rhythm_free_recall_trials <- function(num_items = 3,
     is.scalar.logical(mute_midi_playback)
   )
 
+  if(asynchronous_api_mode) {
+
+    db_vars <- create_db_vars_template(init_with_time_started = FALSE)
+
+    db_vars$midi_vs_audio <- stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page")
+    db_vars$stimuli <- "NA"
+    db_vars$stimuli_durations <- "NA"
+    db_vars$instrument <- "Rhythm"
+    db_vars$attempt <- 1L
+    db_vars$item_id <- "NA"
+    db_vars$display_modality <- 'auditory'
+    db_vars$phase <- 'test'
+    db_vars$rhythmic <- FALSE
+    db_vars$item_bank_id <- "NA" # Free recall trials aren't associated with an item bank
+    db_vars$test_id <- 3L
+    db_vars$onset <- TRUE
+    db_vars$feedback <- TRUE
+    db_vars$feedback_type <- "onset_tempo"
+
+  } else {
+   db_vars <- NULL
+  }
 
   block <- if(page_type == "record_midi_page") {
     musicassessr::record_midi_block(no_pages = num_items,
@@ -264,13 +304,31 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                       musicassessr::get_answer_rhythm_production(input, state, type = "midi", ...)
                                     })
   } else if(page_type == "record_audio_page") {
+
+    code_block_after <- psychTestR::code_block(function(state, ...) {
+      latest_avg_bpm <- psychTestR::get_global("API_DATA_RESPONSE", state)
+      running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state)
+
+      if(!is.null(latest_avg_bpm)) {
+        if(is.null(running_avg_bpm)) {
+          psychTestR::set_global("running_avg_bpm", latest_avg_bpm, state)
+        } else {
+          psychTestR::set_global("running_avg_bpm", c(running_avg_bpm, latest_avg_bpm), state)
+        }
+
+      }
+    })
+
     musicassessr::record_audio_block(no_pages = num_items,
                                      label = paste0(label, ".", page_type),
                                      page_title = page_title,
-                                     page_text = page_text,
+                                     page_text = shiny::tags$div(set_melodic_stimuli("NA", "NA", ), shiny::tags$p(page_text) ),
                                      get_answer = function(input, state, ...) {
                                        musicassessr::get_answer_rhythm_production(input, state, type = "audio", ...)
-                                     })
+                                     },
+                                     db_vars = db_vars,
+                                     code_block_after = code_block_after
+                                     )
   } else if(page_type == "record_key_presses_page") {
     musicassessr::record_key_presses_block(no_pages = num_items,
                                            label = paste0(label, ".", page_type),
@@ -285,7 +343,10 @@ rhythm_free_recall_trials <- function(num_items = 3,
 
   # Note that, whilst the record_xxx_block functions have their own feedback arguments, we add
   # the feedback manually here so that we can use musicassessr::feedback_with_progress
-  block <- add_rtt_feedback(block, feedback)
+  block <- add_rtt_feedback(block,
+                            feedback,
+                            after = 2 + length(code_block_after),
+                            scale_pr = 1 + length(code_block_after))
 
   intro_page <- psychTestR::one_button_page(
     shiny::tags$div(
@@ -303,13 +364,21 @@ rhythm_free_recall_trials <- function(num_items = 3,
 
     if(give_average_bpm) {
       psychTestR::reactive_page(function(state, ...) {
-        results <- psychTestR::results(state)$results
 
-        bpms <- purrr::map_int(results, function(i) {
-          if(is.scalar.na.or.null(i$user_bpm)) NA else i$user_bpm
-        }) %>% as.numeric()
+        if(psychTestR::get_global("asynchronous_api_mode", state)) {
 
-        avg_bpm <- round(mean(bpms, na.rm = TRUE))
+          running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state) %>% as.numeric()
+          avg_bpm <- mean(running_avg_bpm, na.rm = TRUE)
+
+        } else {
+          results <- psychTestR::results(state)$results
+
+          bpms <- purrr::map_int(results, function(i) {
+            if(is.scalar.na.or.null(i$user_bpm)) NA else i$user_bpm
+          }) %>% as.numeric()
+
+          avg_bpm <- round(mean(bpms, na.rm = TRUE))
+        }
 
         psychTestR::set_global("user_bpm", avg_bpm, state)
 
@@ -412,9 +481,6 @@ sync_beat_trial_page <- function(bpm = 120, length_in_seconds = 5, page_type = "
       )
     } else NULL
 
-    print('db_vars...')
-    print(db_vars)
-
     musicassessr::present_stimuli(stimuli = stimulus,
                                   durations = beat,
                                   display_modality = "auditory",
@@ -492,32 +558,28 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
       rhythm <- RTT::pattern_to_ms(pattern = itembankr::str_mel_to_vector(pattern_split), bpm = bpm, type = type) %>%
         round(2)
 
+      if(psychTestR::get_global("asynchronous_api_mode", state)) {
 
-      # Set some vars for storing in DB
-      trial_time_started <- Sys.time()
-
-      db_vars <- if(psychTestR::get_global("asynchronous_api_mode", state)) {
-
-        list(
-          midi_vs_audio = stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page"),
-          stimuli = NULL,
-          stimuli_durations = paste0(rhythm, collapse = ","),
-          trial_time_started = trial_time_started,
-          instrument = "Rhythm",
-          attempt = 1L,
-          item_id = item_id, # Sync Beat trials don't come from an item bank
-          display_modality = 'auditory',
-          phase = 'test',
-          rhythmic = TRUE,
-          item_bank_id = NULL, # Sync Beat trials don't come from an item bank
-          session_id = musicassessr::get_promise_value(psychTestR::get_global("session_id", state)),
-          test_id = 3L,
-          onset = TRUE
-        )
-      } else NULL
-
-      print('db_vars...')
-      print(db_vars)
+        # Set some vars for storing in DB
+        db_vars <- create_db_vars_template(init_with_time_started = TRUE)
+        db_vars$midi_vs_audio <- stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page")
+        db_vars$stimuli <- "NA"
+        db_vars$stimuli_durations <- paste0(rhythm, collapse = ",")
+        db_vars$instrument <- "Rhythm"
+        db_vars$attempt <- 1L
+        db_vars$item_id <- item_id
+        db_vars$display_modality <- 'auditory'
+        db_vars$phase <- 'test'
+        db_vars$rhythmic <- FALSE
+        db_varsitem_bank_id <- "NA" # We should set one up
+        db_vars$test_id <- 3L
+        db_vars$onset <- TRUE
+        db_vars$feedback <- TRUE
+        db_vars$feedback_type <- "onset_tempo"
+        db_vars$session_id <- musicassessr::get_promise_value(psychTestR::get_global("session_id", state))
+      } else {
+        db_vars <- NULL
+      }
 
 
       musicassessr::present_stimuli(stimuli = rep(60, length(rhythm)),

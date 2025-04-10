@@ -22,7 +22,8 @@ RTT(
   asynchronous_api_mode = FALSE,
   app_name,
   experiment_id = NULL,
-  user_id = NULL
+  user_id = NULL,
+  feedback_free_recall = rhythm_feedback(type = "none")
 )
 }
 \arguments{
@@ -32,7 +33,7 @@ RTT(
 
 \item{mute_midi_playback}{Should user audio feedback be muted when using a MIDI pad?}
 
-\item{user_id}{}
+\item{feedback_free_recall}{}
 }
 \description{
 Rhythm tapping test

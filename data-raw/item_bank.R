@@ -116,7 +116,8 @@ RTT_item_bank <- RTT_item_bank %>%
     stimulus_length = length(itembankr::str_mel_to_vector(durations_bpm_120))
     ) %>%
   ungroup() %>%
-  mutate(item_id = paste0("RTT_", dplyr::row_number()))
+  mutate(item_id = paste0("RTT_", dplyr::row_number())) %>%
+  filter(stimulus_length > 2)
 
 
 
@@ -126,3 +127,62 @@ RTT_item_bank <- RTT_item_bank %>%
 
 use_data(RTT_item_bank, overwrite = TRUE)
 
+
+library(itembankr)
+
+RTT_item_bank_for_itembankr <- RTT_item_bank %>%
+  rowwise() %>%
+  mutate(abs_melody = paste0(rep(60, stimulus_length), collapse = ","),
+         melody = paste0(rep(0, stimulus_length), collapse = ",") )  %>%
+  ungroup() %>%
+  rename(durations = durations_bpm_120) %>%
+  select(abs_melody, melody, durations)
+
+
+
+itembankr::create_item_bank(name = "RTT",
+                            input = "phrase_df",
+                            output = "phrase",
+                            input_df = RTT_item_bank_for_itembankr,
+                            distinct_based_on_melody_only = FALSE,
+                            remove_redundancy = FALSE,
+                            remove_melodies_with_only_repeated_notes = FALSE)
+
+
+load("~/RTT/RTT_phrase.rda")
+
+
+RTT_item_bank <- cbind(item_bank,
+                       RTT_item_bank %>% select(-item_id) )
+
+
+use_data(RTT_item_bank, overwrite = TRUE)
+
+
+
+db_con <- musicassessrdb::musicassessr_con(db_name = "melody_dev")
+
+dbWriteTable(db_con,
+             name = 'item_bank_RTT_phrase',
+             value = RTT_item_bank,
+             row.names = FALSE,
+             append = FALSE,
+             overwrite = TRUE)
+
+musicassessrdb::db_disconnect(db_con)
+
+
+# Prod
+
+
+db_con <- musicassessrdb::musicassessr_con(db_name = "melody_prod")
+
+dbWriteTable(db_con,
+             name = 'item_bank_RTT_phrase',
+             value = RTT_item_bank,
+             row.names = FALSE,
+             append = FALSE,
+             overwrite = TRUE)
+
+
+musicassessrdb::db_disconnect(db_con)

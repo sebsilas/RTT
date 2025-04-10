@@ -10,11 +10,12 @@ rhythm_feedback(
   image = "https://adaptiveeartraining.com/assets/drum.png",
   height = NULL,
   width = NULL,
-  progress = NULL
+  progress = NULL,
+  get_async_data = FALSE
 )
 }
 \arguments{
-\item{progress}{}
+\item{get_async_data}{}
 }
 \description{
 Setup feedback
