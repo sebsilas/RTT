@@ -159,6 +159,9 @@ RTT_item_bank <- cbind(item_bank,
 use_data(RTT_item_bank, overwrite = TRUE)
 
 
+# Add to DB
+
+library(DBI)
 
 db_con <- musicassessrdb::musicassessr_con(db_name = "melody_dev")
 
