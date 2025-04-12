@@ -23,6 +23,7 @@
 #' @param use_presigned_url
 #' @param feedback_free_recall
 #' @param SNR_test
+#' @param allow_SNR_failure
 #'
 #' @return
 #' @export
@@ -50,7 +51,8 @@ RTT_standalone <- function(app_name = "RTT",
                            user_id = NULL,
                            use_presigned_url = FALSE,
                            feedback_free_recall = rhythm_feedback(type = "none"),
-                           SNR_test = FALSE) {
+                           SNR_test = FALSE,
+                           allow_SNR_failure = FALSE) {
 
   data_collection_method <- match.arg(data_collection_method)
   call_and_response_end <- match.arg(call_and_response_end)
@@ -73,7 +75,8 @@ RTT_standalone <- function(app_name = "RTT",
             is.null.or(user_id, is.numeric),
             is.scalar.logical(use_presigned_url),
             is.list(feedback_free_recall) && length(feedback_free_recall) == 2L && check_names_same(names(feedback_free_recall), c("type", "fun")),
-            is.scalar.logical(SNR_test)
+            is.scalar.logical(SNR_test),
+            is.scalar.logical(allow_SNR_failure)
             )
 
   tl <- RTT(page_type,
@@ -93,7 +96,8 @@ RTT_standalone <- function(app_name = "RTT",
             app_name = app_name,
             experiment_id = experiment_id,
             user_id = user_id,
-            feedback_free_recall = feedback_free_recall)
+            feedback_free_recall = feedback_free_recall,
+            allow_SNR_failure = allow_SNR_failure)
 
   welcome_pg <- psychTestR::one_button_page(shiny::tags$div(shiny::tags$h2("Welcome to the Rhythm Tapping Test!"),
                                                             if(asynchronous_api_mode) shiny::tags$script("
@@ -131,6 +135,7 @@ RTT_standalone <- function(app_name = "RTT",
                                                               record_audio = data_collection_method == "audio",
                                                               setup_options = musicassessr::setup_pages_options(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses",
                                                                                                                 headphones = TRUE,
+                                                                                                                allow_SNR_failure = allow_SNR_failure,
                                                                                                                 get_instrument_range = FALSE,
                                                                                                                 SNR_test = SNR_test,
                                                                                                                 concise_wording = TRUE)))
