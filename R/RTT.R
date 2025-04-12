@@ -278,7 +278,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
 
   if(asynchronous_api_mode) {
 
-    db_vars <- create_db_vars_template(init_with_time_started = FALSE)
+    db_vars <- musicassessr::create_db_vars_template(init_with_time_started = FALSE)
 
     db_vars$midi_vs_audio <- stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page")
     db_vars$stimuli <- "NA"
@@ -592,7 +592,7 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
       if(psychTestR::get_global("asynchronous_api_mode", state)) {
 
         # Set some vars for storing in DB
-        db_vars <- create_db_vars_template(init_with_time_started = TRUE)
+        db_vars <- musicassessr::create_db_vars_template(init_with_time_started = TRUE)
         db_vars$midi_vs_audio <- stringr::str_remove(stringr::str_remove(page_type, "record_"), "_page")
         db_vars$stimuli <- "NA"
         db_vars$stimuli_durations <- paste0(rhythm, collapse = ",")
