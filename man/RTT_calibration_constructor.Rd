@@ -6,11 +6,12 @@
 \usage{
 RTT_calibration_constructor(
   app_name = "RTT_calibration_study",
-  data_collection_method = "audio"
+  data_collection_method = "audio",
+  asynchronous_api_mode = TRUE
 )
 }
 \arguments{
-\item{data_collection_method}{}
+\item{asynchronous_api_mode}{}
 }
 \description{
 Constructor for 2023 calibration study

@@ -1,5 +1,7 @@
 
 
+load_all()
+
 library(tidyverse)
 
 # Advice from DM:
@@ -121,6 +123,11 @@ RTT_item_bank <- RTT_item_bank %>%
 
 
 
+# Make the last dur always 0.5 for scoring purposes (we don't know how long the last hit is)
+RTT_item_bank <- RTT_item_bank %>%
+  rowwise() %>%
+  mutate( durations_bpm_120_2 = paste0(c(itembankr::str_mel_to_vector(durations_bpm_120)[1:(stimulus_length-1)], 0.5), collapse = ",") ) %>%
+  ungroup()
 
 
 
@@ -189,3 +196,4 @@ dbWriteTable(db_con,
 
 
 musicassessrdb::db_disconnect(db_con)
+

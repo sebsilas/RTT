@@ -22,6 +22,7 @@
 #' @param user_id
 #' @param use_presigned_url
 #' @param feedback_free_recall
+#' @param SNR_test
 #'
 #' @return
 #' @export
@@ -48,7 +49,8 @@ RTT_standalone <- function(app_name = "RTT",
                            experiment_id = NULL,
                            user_id = NULL,
                            use_presigned_url = FALSE,
-                           feedback_free_recall = rhythm_feedback(type = "none")) {
+                           feedback_free_recall = rhythm_feedback(type = "none"),
+                           SNR_test = FALSE) {
 
   data_collection_method <- match.arg(data_collection_method)
   call_and_response_end <- match.arg(call_and_response_end)
@@ -70,7 +72,8 @@ RTT_standalone <- function(app_name = "RTT",
             is.null.or(experiment_id, is.numeric),
             is.null.or(user_id, is.numeric),
             is.scalar.logical(use_presigned_url),
-            is.list(feedback_free_recall) && length(feedback_free_recall) == 2L && check_names_same(names(feedback_free_recall), c("type", "fun"))
+            is.list(feedback_free_recall) && length(feedback_free_recall) == 2L && check_names_same(names(feedback_free_recall), c("type", "fun")),
+            is.scalar.logical(SNR_test)
             )
 
   tl <- RTT(page_type,
@@ -129,7 +132,7 @@ RTT_standalone <- function(app_name = "RTT",
                                                               setup_options = musicassessr::setup_pages_options(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses",
                                                                                                                 headphones = TRUE,
                                                                                                                 get_instrument_range = FALSE,
-                                                                                                                SNR_test = FALSE,
+                                                                                                                SNR_test = SNR_test,
                                                                                                                 concise_wording = TRUE)))
 
 
@@ -222,6 +225,8 @@ RTT <- function(page_type = "record_midi_page",
       if(get_p_id) psychTestR::get_p_id(),
       if(setup_pages && !standalone) musicassessr::setup_pages(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses", headphones = TRUE, get_instrument_range = FALSE, SNR_test = FALSE, concise_wording = TRUE, mute_midi_playback = mute_midi_playback),
 
+      if(asynchronous_api_mode) musicassessr::wait_for_api_page(),
+
       # Free Recall Trials
       ## Examples
       if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback_free_recall, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback, asynchronous_api_mode = asynchronous_api_mode),
@@ -289,6 +294,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
     db_vars$onset <- TRUE
     db_vars$feedback <- TRUE
     db_vars$feedback_type <- "onset_tempo"
+    db_vars$trial_paradigm <- "free_recall"
 
   } else {
    db_vars <- NULL
@@ -305,20 +311,6 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                     })
   } else if(page_type == "record_audio_page") {
 
-    code_block_after <- psychTestR::code_block(function(state, ...) {
-      latest_avg_bpm <- psychTestR::get_global("API_DATA_RESPONSE", state)
-      running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state)
-
-      if(!is.null(latest_avg_bpm)) {
-        if(is.null(running_avg_bpm)) {
-          psychTestR::set_global("running_avg_bpm", latest_avg_bpm, state)
-        } else {
-          psychTestR::set_global("running_avg_bpm", c(running_avg_bpm, latest_avg_bpm), state)
-        }
-
-      }
-    })
-
     musicassessr::record_audio_block(no_pages = num_items,
                                      label = paste0(label, ".", page_type),
                                      page_title = page_title,
@@ -326,8 +318,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                      get_answer = function(input, state, ...) {
                                        musicassessr::get_answer_rhythm_production(input, state, type = "audio", ...)
                                      },
-                                     db_vars = db_vars,
-                                     code_block_after = code_block_after
+                                     db_vars = db_vars
                                      )
   } else if(page_type == "record_key_presses_page") {
     musicassessr::record_key_presses_block(no_pages = num_items,
@@ -343,10 +334,33 @@ rhythm_free_recall_trials <- function(num_items = 3,
 
   # Note that, whilst the record_xxx_block functions have their own feedback arguments, we add
   # the feedback manually here so that we can use musicassessr::feedback_with_progress
-  block <- add_rtt_feedback(block,
-                            feedback,
-                            after = 2 + length(code_block_after),
-                            scale_pr = 1 + length(code_block_after))
+  block <- add_rtt_feedback(block, feedback, after = 2)
+
+  if(asynchronous_api_mode) {
+
+    code_block_after <- psychTestR::code_block(function(state, ...) {
+
+      latest_avg_bpm <- psychTestR::get_global("API_DATA_RESPONSE", state)
+      running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state)
+
+      logging::loginfo("running_avg_bpm: %s", running_avg_bpm)
+
+      if(!is.null(latest_avg_bpm)) {
+        if(is.null(running_avg_bpm)) {
+          psychTestR::set_global("running_avg_bpm", latest_avg_bpm, state)
+        } else {
+          psychTestR::set_global("running_avg_bpm", c(running_avg_bpm, latest_avg_bpm), state)
+        }
+
+      }
+    })
+
+    block <- musicassessr::insert_item_into_every_other_n_position_in_list(block, code_block_after, n = 3, scale_length = 0.5)
+
+
+  }
+
+
 
   intro_page <- psychTestR::one_button_page(
     shiny::tags$div(
@@ -365,22 +379,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
     if(give_average_bpm) {
       psychTestR::reactive_page(function(state, ...) {
 
-        if(psychTestR::get_global("asynchronous_api_mode", state)) {
-
-          running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state) %>% as.numeric()
-          avg_bpm <- mean(running_avg_bpm, na.rm = TRUE)
-
-        } else {
-          results <- psychTestR::results(state)$results
-
-          bpms <- purrr::map_int(results, function(i) {
-            if(is.scalar.na.or.null(i$user_bpm)) NA else i$user_bpm
-          }) %>% as.numeric()
-
-          avg_bpm <- round(mean(bpms, na.rm = TRUE))
-        }
-
-        psychTestR::set_global("user_bpm", avg_bpm, state)
+        avg_bpm <- compute_avg_bpm(state)
 
         if(is.nan(avg_bpm)) {
           psychTestR::one_button_page("Your average BPM could not be computed.")
@@ -389,10 +388,42 @@ rhythm_free_recall_trials <- function(num_items = 3,
         }
 
       })
+    } else {
+      psychTestR::code_block(function(state, ...) {
+        avg_bpm <- compute_avg_bpm(state)
+        logging::loginfo("Finished computing avg BPM. It was: %s", avg_bpm)
+      })
     }
   )
 
 
+}
+
+compute_avg_bpm <- function(state) {
+
+  if(psychTestR::get_global("asynchronous_api_mode", state)) {
+
+    running_avg_bpm <- psychTestR::get_global("running_avg_bpm", state) %>% as.numeric()
+    logging::loginfo("running_avg_bpm: %s", running_avg_bpm)
+    avg_bpm <- mean(running_avg_bpm, na.rm = TRUE)
+
+  } else {
+    results <- psychTestR::results(state)$results
+
+    bpms <- purrr::map_int(results, function(i) {
+      if(is.scalar.na.or.null(i$user_bpm)) NA else i$user_bpm
+    }) %>% as.numeric()
+
+    avg_bpm <- round(mean(bpms, na.rm = TRUE))
+  }
+
+  if(!is.scalar.numeric(avg_bpm)) {
+    avg_bpm <- 69
+  }
+
+  psychTestR::set_global("user_bpm", avg_bpm, state)
+
+  return(avg_bpm)
 }
 
 
@@ -538,8 +569,8 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
       dplyr::slice_sample(n = num_items)
   }
 
-
-
+  smp_rhythm <- smp_rhythm %>%
+    dplyr::select(pattern, pattern_split, type, RAT_difficulty, durations_bpm_120, stimulus_length, item_id)
 
   trials <- purrr::pmap(smp_rhythm, function(pattern, pattern_split, type, RAT_difficulty, durations_bpm_120, stimulus_length, item_id) {
 
@@ -571,11 +602,11 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
         db_vars$display_modality <- 'auditory'
         db_vars$phase <- 'test'
         db_vars$rhythmic <- FALSE
-        db_varsitem_bank_id <- "NA" # We should set one up
+        db_varsitem_bank_id <- 21L # For dev
         db_vars$test_id <- 3L
         db_vars$onset <- TRUE
-        db_vars$feedback <- TRUE
-        db_vars$feedback_type <- "onset_tempo"
+        db_vars$feedback <- FALSE
+        db_vars$feedback_type <- "NA"
         db_vars$session_id <- musicassessr::get_promise_value(psychTestR::get_global("session_id", state))
       } else {
         db_vars <- NULL
@@ -588,7 +619,10 @@ rhythm_call_and_response_trials <-  function(num_items = 10,
                                     page_label = paste0(label, ".", page_type),
                                     stimuli_type = "midi_notes",
                                     page_title = "Tap back the rhythm.",
-                                    page_text = "Please tap back a rhythm after you hear it, then click stop.",
+                                    page_text = shiny::tags$div(
+                                      musicassessr::set_melodic_stimuli(stimuli = "NA", durations = rhythm),
+                                      shiny::tags$p("Please tap back a rhythm after you hear it, then click stop.")
+                                      ),
                                     page_type = page_type,
                                     midi_device = if(is.null(midi_device)) "" else midi_device,
                                     trigger_start_of_stimulus_fun = musicassessr::paradigm(paradigm_type = "call_and_response",

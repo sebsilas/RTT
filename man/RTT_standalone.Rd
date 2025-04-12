@@ -22,7 +22,8 @@ RTT_standalone(
   experiment_id = NULL,
   user_id = NULL,
   use_presigned_url = FALSE,
-  feedback_free_recall = rhythm_feedback(type = "none")
+  feedback_free_recall = rhythm_feedback(type = "none"),
+  SNR_test = FALSE
 )
 }
 \arguments{
@@ -34,7 +35,7 @@ RTT_standalone(
 
 \item{mute_midi_playback}{Should user audio feedback be muted when using a MIDI pad?}
 
-\item{feedback_free_recall}{}
+\item{SNR_test}{}
 }
 \description{
 Launch the Rhythm Tapping Task
