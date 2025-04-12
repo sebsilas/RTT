@@ -96,8 +96,7 @@ RTT_standalone <- function(app_name = "RTT",
             app_name = app_name,
             experiment_id = experiment_id,
             user_id = user_id,
-            feedback_free_recall = feedback_free_recall,
-            allow_SNR_failure = allow_SNR_failure)
+            feedback_free_recall = feedback_free_recall)
 
   welcome_pg <- psychTestR::one_button_page(shiny::tags$div(shiny::tags$h2("Welcome to the Rhythm Tapping Test!"),
                                                             if(asynchronous_api_mode) shiny::tags$script("
