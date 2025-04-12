@@ -18,6 +18,7 @@ RTT_calibration_constructor <- function(app_name = "RTT_calibration_study",
                       feedback = RTT::rhythm_feedback(type = "image", image = "https://musicassessr.com/assets/robot.png", height = 200, width = 200),
 
                       user_id = if(Sys.getenv("R_CONFIG_ACTIVE") == "prod") 189 else 1L,
+                      experiment_id = if(Sys.getenv("R_CONFIG_ACTIVE") == "prod") 7L else 1L,
                       SNR_test = TRUE,
                       # num_examples = list(free_recall = 1L, sync_beat = 1L, call_and_response = 1L),
                       # num_items = list(free_recall = 3L, sync_beat = 6L, call_and_response = 5L),
