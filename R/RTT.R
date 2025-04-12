@@ -318,7 +318,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
     musicassessr::record_audio_block(no_pages = num_items,
                                      label = paste0(label, ".", page_type),
                                      page_title = page_title,
-                                     page_text = shiny::tags$div(set_melodic_stimuli("NA", "NA", ), shiny::tags$p(page_text) ),
+                                     page_text = shiny::tags$div(musicassessr::set_melodic_stimuli("NA", "NA", ), shiny::tags$p(page_text) ),
                                      get_answer = function(input, state, ...) {
                                        musicassessr::get_answer_rhythm_production(input, state, type = "audio", ...)
                                      },
