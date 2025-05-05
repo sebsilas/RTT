@@ -231,7 +231,14 @@ RTT <- function(page_type = "record_midi_page",
 
       if(asynchronous_api_mode) musicassessr::wait_for_api_page(),
 
+      if(asynchronous_api_mode) musicassessr::set_test(test_name = "RTT", test_id = 3L),
+
       # Free Recall Trials
+
+      psychTestR::code_block(function(state, ...) {
+        psychTestR::set_global('melody_block_paradigm', "rhythm_free_recall", state)
+      }),
+
       ## Examples
       if(num_examples$free_recall > 0L) rhythm_free_recall_trials(num_items = num_examples$free_recall, page_type = page_type, feedback = feedback_free_recall, with_intro_page = num_examples$free_recall > 0L, with_example_introduction = TRUE, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback, asynchronous_api_mode = asynchronous_api_mode),
       ## Real Trials
@@ -239,6 +246,11 @@ RTT <- function(page_type = "record_midi_page",
       if(num_items$free_recall > 0L) rhythm_free_recall_trials(num_items = num_items$free_recall, page_type = page_type, feedback = feedback_free_recall, with_intro_page = num_examples$free_recall < 1L, give_average_bpm = identical(feedback$type, "researcher"), mute_midi_playback = mute_midi_playback, asynchronous_api_mode = asynchronous_api_mode), # i.e., only give the average if using "researcher" feedback mode
 
       # Sync Beat Trials
+
+      psychTestR::code_block(function(state, ...) {
+        psychTestR::set_global('melody_block_paradigm', "rhythm_sync_beat", state)
+      }),
+
       ## Examples
       if(num_examples$sync_beat > 0L) sync_beat_trials(num_items = num_examples$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat > 0L, with_example_introduction = TRUE, bpm_range = sync_beat_bpm_range, preset_bpms = rep(sync_beat_bpms[1], num_examples$sync_beat), mute_midi_playback = mute_midi_playback),
       ## Real Trials
@@ -246,6 +258,11 @@ RTT <- function(page_type = "record_midi_page",
       if(num_items$sync_beat > 0L) sync_beat_trials(num_items = num_items$sync_beat, page_type = page_type, feedback = feedback, with_intro_page = num_examples$sync_beat < 1L, bpm_range = sync_beat_bpm_range, preset_bpms = sync_beat_bpms, mute_midi_playback = mute_midi_playback),
 
       # Call and Response Trials
+
+      psychTestR::code_block(function(state, ...) {
+        psychTestR::set_global('melody_block_paradigm', "rhythm_call_and_response", state)
+      }),
+
       ## Examples
       if(num_examples$call_and_response > 0L) rhythm_call_and_response_trials(num_items = num_examples$call_and_response, bpm = call_and_response_bpm, page_type = page_type, feedback = feedback, with_intro_page = num_examples$call_and_response > 0L, with_example_introduction = TRUE, filter_call_and_response_stimuli_length = filter_call_and_response_stimuli_length, mute_midi_playback = mute_midi_playback),
       ## Real Trials
@@ -309,7 +326,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
                                     label = paste0(label, ".", page_type),
                                     page_title = page_title,
                                     mute_midi_playback = mute_midi_playback,
-                                    page_text = page_text,
+                                    page_text = shiny::tags$div(musicassessr::set_melodic_stimuli("NA", "NA"), shiny::tags$p(page_text)),
                                     get_answer = function(input, state, ...) {
                                       musicassessr::get_answer_rhythm_production(input, state, type = "midi", ...)
                                     })
@@ -318,7 +335,7 @@ rhythm_free_recall_trials <- function(num_items = 3,
     musicassessr::record_audio_block(no_pages = num_items,
                                      label = paste0(label, ".", page_type),
                                      page_title = page_title,
-                                     page_text = shiny::tags$div(musicassessr::set_melodic_stimuli("NA", "NA", ), shiny::tags$p(page_text) ),
+                                     page_text = shiny::tags$div(musicassessr::set_melodic_stimuli("NA", "NA"), shiny::tags$p(page_text)),
                                      get_answer = function(input, state, ...) {
                                        musicassessr::get_answer_rhythm_production(input, state, type = "audio", ...)
                                      },
