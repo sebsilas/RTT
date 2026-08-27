@@ -5,7 +5,6 @@
 \title{Rhythm tapping test}
 \usage{
 RTT(
-  page_type = "record_midi_page",
   feedback = rhythm_feedback(type = "none"),
   num_items = list(free_recall = 3L, sync_beat = 3L, call_and_response = 3L),
   num_examples = list(free_recall = 2L, sync_beat = 2L, call_and_response = 2L),

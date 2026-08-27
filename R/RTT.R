@@ -56,7 +56,6 @@ RTT_standalone <- function(app_name = "RTT",
 
   data_collection_method <- match.arg(data_collection_method)
   call_and_response_end <- match.arg(call_and_response_end)
-  page_type <- paste0("record_", data_collection_method, "_page")
 
   stopifnot(
             is.scalar.character(app_name),
@@ -79,8 +78,7 @@ RTT_standalone <- function(app_name = "RTT",
             is.scalar.logical(allow_SNR_failure)
             )
 
-  tl <- RTT(page_type,
-            feedback,
+  tl <- RTT(feedback,
             num_items,
             num_examples,
             call_and_response_end,
@@ -146,7 +144,6 @@ RTT_standalone <- function(app_name = "RTT",
 
 #' Rhythm tapping test
 #'
-#' @param page_type
 #' @param feedback
 #' @param num_items
 #' @param num_examples
@@ -170,8 +167,7 @@ RTT_standalone <- function(app_name = "RTT",
 #' @export
 #'
 #' @examples
-RTT <- function(page_type = "record_midi_page",
-                feedback = rhythm_feedback(type = "none"),
+RTT <- function(feedback = rhythm_feedback(type = "none"),
                 num_items = list(free_recall = 3L,
                                  sync_beat = 3L,
                                  call_and_response = 3L),
@@ -195,11 +191,13 @@ RTT <- function(page_type = "record_midi_page",
                 feedback_free_recall = rhythm_feedback(type = "none")) {
 
   data_collection_method <- match.arg(data_collection_method)
+  page_type <- paste0("record_", data_collection_method, "_page")
 
 
   RTT_checks(call_and_response_bpm, num_items, num_examples, sync_beat_bpm_range, sync_beat_bpms)
 
   call_and_response_end <- match.arg(call_and_response_end)
+
 
   stopifnot(
     page_type %in% c("record_midi_page", "record_audio_page", "record_key_presses_page"),
@@ -230,6 +228,8 @@ RTT <- function(page_type = "record_midi_page",
       if(setup_pages && !standalone) musicassessr::setup_pages(input_type = if(data_collection_method == "midi") "midi_keyboard" else if(data_collection_method == "audio") "microphone" else "key_presses", headphones = TRUE, get_instrument_range = FALSE, SNR_test = FALSE, concise_wording = TRUE, mute_midi_playback = mute_midi_playback),
 
       if(asynchronous_api_mode) musicassessr::wait_for_api_page(),
+
+      if(data_collection_method == "midi") musicassessr::set_instrument(18L), # Rhythm
 
       if(asynchronous_api_mode) musicassessr::set_test(test_name = "RTT", test_id = 3L),
 
